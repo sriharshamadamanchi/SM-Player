@@ -1,6 +1,5 @@
 package com.phantom.smplayer.viewmodel
 
-import android.net.Uri
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -10,7 +9,7 @@ import java.io.File
 class MainViewModel : ViewModel() {
 
     private val _videoDirectories = MutableLiveData<Map<File, List<Video>>>()
-    private val _selectedVideo = MutableLiveData<Uri>()
+    private val _selectedVideo = MutableLiveData<Video>()
 
     fun updateVideoDirectories(videoDirectories: Map<File, List<Video>>) {
         _videoDirectories.postValue(videoDirectories)
@@ -20,11 +19,11 @@ class MainViewModel : ViewModel() {
         return _videoDirectories
     }
 
-    fun setSelectedVideo(uri: Uri) {
-        _selectedVideo.value = uri
+    fun setSelectedVideo(video: Video) {
+        _selectedVideo.value = video
     }
 
-    fun getSelectedVideo(): Uri? {
+    fun getSelectedVideo(): Video? {
         return _selectedVideo.value
     }
 }

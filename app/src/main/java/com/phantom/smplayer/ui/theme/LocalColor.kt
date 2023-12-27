@@ -5,6 +5,7 @@ import androidx.compose.ui.graphics.Color
 object LocalColor {
 
     val Base = Color(0XFF010614)
+    val Teal = Color(0XFF2CE0BF)
 
     object Primary {
         val White = Color(0xFFF1F9FD)

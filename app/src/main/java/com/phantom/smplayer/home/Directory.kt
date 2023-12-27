@@ -71,7 +71,7 @@ fun Directory(
                         videoName = it.name,
                         duration = it.duration
                     ) {
-                        mainViewModel.setSelectedVideo(it.uri)
+                        mainViewModel.setSelectedVideo(it)
                         navController.navigate("video-player")
                     }
                 }

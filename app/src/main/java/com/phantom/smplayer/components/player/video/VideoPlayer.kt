@@ -5,6 +5,7 @@ import android.view.ViewGroup
 import android.view.WindowManager
 import androidx.annotation.OptIn
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -18,6 +19,7 @@ import androidx.media3.common.Player.REPEAT_MODE_OFF
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.SeekParameters
 import androidx.media3.ui.PlayerView
 import com.phantom.smplayer.MainActivity
 import com.phantom.smplayer.ui.theme.LocalColor
@@ -31,12 +33,12 @@ fun VidePlayer() {
     val mainViewModel: MainViewModel =
         viewModel(viewModelStoreOwner = LocalContext.current as MainActivity)
 
-    val uri = mainViewModel.getSelectedVideo()
+    val video = mainViewModel.getSelectedVideo()
 
     val context = LocalContext.current
 
     val mediaItem = MediaItem.Builder()
-        .setUri(uri)
+        .setUri(video?.uri)
         .build()
 
     val exoPlayer = remember(context, mediaItem) {
@@ -49,6 +51,7 @@ fun VidePlayer() {
             .setLoadControl(loadControl)
             .build()
             .apply {
+                setSeekParameters(SeekParameters(10000, 10000))
                 setMediaItem(mediaItem)
                 prepare()
                 playWhenReady = false
@@ -59,7 +62,7 @@ fun VidePlayer() {
 
     DisposableEffect(Unit) {
         val activity = context as MainActivity
-        activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+        activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE
 
         context.window.setFlags(
             WindowManager.LayoutParams.FLAG_FULLSCREEN,
@@ -72,19 +75,27 @@ fun VidePlayer() {
         }
     }
 
-    AndroidView(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(LocalColor.Monochrome.Black),
-        factory = {
-            PlayerView(context).apply {
-                layoutParams = ViewGroup.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.MATCH_PARENT
-                )
+    val playerView = PlayerView(context).apply {
+        useController = false
+        layoutParams = ViewGroup.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT
+        )
 
-                player = exoPlayer
-                exoPlayer.play()
-            }
-        })
+        player = exoPlayer
+        exoPlayer.play()
+    }
+
+    Box {
+        AndroidView(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(LocalColor.Monochrome.Black),
+            factory = { playerView }
+        )
+        MediaControls(
+            player = exoPlayer,
+            video = video
+        )
+    }
 }
