@@ -215,17 +215,16 @@ fun MediaControls(
                     tint = LocalColor.Monochrome.White,
                     modifier = Modifier.size(48.dp)
                 )
+
                 Icon(
                     painter = painterResource(id = R.drawable.replay_10),
                     contentDescription = null,
                     tint = LocalColor.Monochrome.White,
                     modifier = Modifier
                         .size(48.dp)
-                        .clickable {
-                            player.seekBack()
-                            sliderPosition.floatValue = player.currentPosition.toFloat()
-                        }
+                        .clickable { onDoubleTap(forward = false) }
                 )
+
                 Icon(
                     painter = painterResource(id = if (playing.value) R.drawable.pause_circle else R.drawable.play_circle),
                     contentDescription = null,
@@ -242,17 +241,16 @@ fun MediaControls(
                             playing.value = !playing.value
                         }
                 )
+
                 Icon(
                     painter = painterResource(id = R.drawable.forward_10),
                     contentDescription = null,
                     tint = LocalColor.Monochrome.White,
                     modifier = Modifier
                         .size(48.dp)
-                        .clickable {
-                            player.seekForward()
-                            sliderPosition.floatValue = player.currentPosition.toFloat()
-                        }
+                        .clickable { onDoubleTap(forward = true) }
                 )
+
                 Icon(
                     painter = painterResource(id = R.drawable.skip_next),
                     contentDescription = null,
@@ -305,7 +303,7 @@ fun BoxScope.SwipeControl(
             .height(200.dp)
             .then(modifier)
             .clip(RoundedCornerShape(40.dp))
-            .background(LocalColor.Monochrome.White)
+            .background(LocalColor.Monochrome.Dark.copy(alpha = 0.5F))
             .align(alignment)
     ) {
         Box(
@@ -313,7 +311,7 @@ fun BoxScope.SwipeControl(
                 .fillMaxWidth()
                 .fillMaxHeight(fraction = 1F - state.floatValue / 16F)
                 .background(
-                    LocalColor.Teal
+                    LocalColor.Monochrome.White
                 )
                 .align(Alignment.BottomCenter)
         )
@@ -328,7 +326,7 @@ fun BoxScope.SwipeControl(
 
         val off = remember {
             if (isBrightnessControl) {
-                R.drawable.brightness_empty
+                R.drawable.backlight_low
             } else {
                 R.drawable.music_off
             }
@@ -338,7 +336,7 @@ fun BoxScope.SwipeControl(
         Icon(
             painter = painterResource(id = if (low) off else normal),
             contentDescription = null,
-            tint = if (low) LocalColor.Monochrome.Black else LocalColor.Monochrome.White,
+            tint = if (low) LocalColor.Monochrome.White else LocalColor.Monochrome.Black,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .padding(bottom = 10.dp)
