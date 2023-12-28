@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -145,16 +144,6 @@ fun MediaControls(
             }
     ) {
 
-        // Brightness Slider
-        if (showBrightness.value) {
-            SwipeControl(
-                state = brightness,
-                alignment = Alignment.CenterStart,
-                modifier = Modifier.offset(x = 50.dp),
-                isBrightnessControl = true
-            )
-        }
-
         // Left: Volume Gesture Listener
         GestureView(
             flagState = showVolume,
@@ -169,16 +158,15 @@ fun MediaControls(
             },
             onTap = { onTap() },
             onDoubleTap = { onDoubleTap(forward = false) }
-        )
+        ) {
 
-        // Volume Slider
-        if (showVolume.value) {
-            SwipeControl(
-                state = volume,
-                alignment = Alignment.CenterEnd,
-                modifier = Modifier.offset(x = (-50).dp),
-                isBrightnessControl = false
-            )
+            // Brightness Slider
+            if (showBrightness.value) {
+                SwipeControl(
+                    state = brightness,
+                    isBrightnessControl = true
+                )
+            }
         }
 
         // Right: Brightness Listener
@@ -194,7 +182,15 @@ fun MediaControls(
             },
             onTap = { onTap() },
             onDoubleTap = { onDoubleTap(forward = true) }
-        )
+        ) {
+            // Volume Slider
+            if (showVolume.value) {
+                SwipeControl(
+                    state = volume,
+                    isBrightnessControl = false
+                )
+            }
+        }
 
         AnimatedVisibility(
             visible = showControls.value,
@@ -292,19 +288,16 @@ fun MediaControls(
 
 @Composable
 fun BoxScope.SwipeControl(
-    modifier: Modifier,
     state: MutableFloatState,
-    alignment: Alignment,
     isBrightnessControl: Boolean
 ) {
     Box(
         modifier = Modifier
             .width(45.dp)
             .height(200.dp)
-            .then(modifier)
             .clip(RoundedCornerShape(40.dp))
             .background(LocalColor.Monochrome.Dark.copy(alpha = 0.5F))
-            .align(alignment)
+            .align(Alignment.Center)
     ) {
         Box(
             modifier = Modifier
@@ -352,7 +345,8 @@ fun BoxScope.GestureView(
     alignment: Alignment,
     onDrag: () -> Unit,
     onTap: () -> Unit,
-    onDoubleTap: () -> Unit
+    onDoubleTap: () -> Unit,
+    content: @Composable BoxScope.() -> Unit
 ) {
     Box(modifier = Modifier
         .fillMaxHeight()
@@ -379,6 +373,9 @@ fun BoxScope.GestureView(
 
                 onDrag()
             }
-        }
-    )
+        },
+        contentAlignment = Alignment.Center
+    ) {
+        content()
+    }
 }
