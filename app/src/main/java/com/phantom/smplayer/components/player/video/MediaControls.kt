@@ -9,6 +9,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -148,6 +149,16 @@ fun MediaControls(
             .fillMaxSize()
             .pointerInput(Unit) {
                 detectTapGestures(onTap = { onTap() })
+            }
+            .pointerInput(Unit) {
+                detectHorizontalDragGestures(
+                    onDragStart = { showControls.value = true },
+                    onDragCancel = { showControls.value = false },
+                    onDragEnd = { showControls.value = false }
+                ) { _, dragAmount ->
+                    player.seekTo(player.currentPosition + (1000 * dragAmount).toLong())
+                    sliderPosition.floatValue += 1000 * dragAmount
+                }
             }
     ) {
 
