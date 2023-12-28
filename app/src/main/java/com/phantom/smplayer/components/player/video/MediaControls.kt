@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
@@ -209,7 +210,9 @@ fun MediaControls(
                     painter = painterResource(id = R.drawable.skip_previous),
                     contentDescription = null,
                     tint = LocalColor.Monochrome.White,
-                    modifier = Modifier.size(48.dp)
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(CircleShape)
                 )
 
                 Icon(
@@ -218,6 +221,7 @@ fun MediaControls(
                     tint = LocalColor.Monochrome.White,
                     modifier = Modifier
                         .size(48.dp)
+                        .clip(CircleShape)
                         .clickable { onDoubleTap(forward = false) }
                 )
 
@@ -227,6 +231,7 @@ fun MediaControls(
                     tint = LocalColor.Monochrome.White,
                     modifier = Modifier
                         .size(48.dp)
+                        .clip(CircleShape)
                         .clickable {
                             if (playing.value) {
                                 player.pause()
@@ -244,6 +249,7 @@ fun MediaControls(
                     tint = LocalColor.Monochrome.White,
                     modifier = Modifier
                         .size(48.dp)
+                        .clip(CircleShape)
                         .clickable { onDoubleTap(forward = true) }
                 )
 
@@ -251,7 +257,9 @@ fun MediaControls(
                     painter = painterResource(id = R.drawable.skip_next),
                     contentDescription = null,
                     tint = LocalColor.Monochrome.White,
-                    modifier = Modifier.size(48.dp)
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(CircleShape)
                 )
             }
         }
