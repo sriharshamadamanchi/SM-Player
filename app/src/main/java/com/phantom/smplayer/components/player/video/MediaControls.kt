@@ -13,6 +13,7 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -26,6 +27,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableFloatState
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -80,8 +83,6 @@ fun MediaControls(
         activityContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
     }
 
-    val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC).toFloat()
-
     val volume = remember {
         mutableFloatStateOf(audioManager.getStreamVolume(AudioManager.STREAM_MUSIC).toFloat())
     }
@@ -92,13 +93,6 @@ fun MediaControls(
 
     LaunchedEffect(player) {
         controlsHandler.postDelayed(controlsListener, 10000)
-
-//        player.addListener(object : Player.Listener {
-//            override fun onIsPlayingChanged(isPlaying: Boolean) {
-//                super.onIsPlayingChanged(isPlaying)
-//                playing.value = isPlaying
-//            }
-//        })
 
         val handler = Handler(Looper.getMainLooper())
 
@@ -138,137 +132,62 @@ fun MediaControls(
             }
     ) {
 
+        // Brightness Slider
         if (showBrightness.value) {
-            Box(
-                modifier = Modifier
-                    .width(45.dp)
-                    .height(200.dp)
-                    .offset(x = 50.dp)
-                    .clip(RoundedCornerShape(40.dp))
-                    .background(LocalColor.Monochrome.White)
-                    .align(Alignment.CenterStart)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .fillMaxHeight(fraction = 1F - brightness.floatValue / 100F)
-                        .background(
-                            LocalColor.Teal
-                        )
-                        .align(Alignment.BottomCenter)
-                )
-
-                val lowBrightness = (100F - brightness.floatValue) <= 20F
-                Icon(
-                    painter = painterResource(id = if (lowBrightness) R.drawable.brightness_empty else R.drawable.light_mode),
-                    contentDescription = null,
-                    tint = if (lowBrightness) LocalColor.Monochrome.Black else LocalColor.Monochrome.White,
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .padding(bottom = 10.dp)
-
-                )
-            }
+            SwipeControl(
+                state = brightness,
+                alignment = Alignment.CenterStart,
+                modifier = Modifier.offset(x = 50.dp),
+                isBrightnessControl = true
+            )
         }
 
-        Box(modifier = Modifier
-            .fillMaxHeight()
-            .fillMaxWidth(fraction = 0.3F)
-            .align(Alignment.CenterStart)
-            .pointerInput(Unit) {
-                detectVerticalDragGestures(
-                    onDragStart = { showVolume.value = true },
-                    onDragEnd = { showVolume.value = false },
-                    onDragCancel = { showVolume.value = false }
-                ) { _, dragAmount ->
-                    volume.floatValue += dragAmount / 24F
-                    if (volume.floatValue < 0) {
-                        volume.floatValue = 0F
-                    } else if (volume.floatValue > maxVolume) {
-                        volume.floatValue = maxVolume
-                    }
-
-                    audioManager.setStreamVolume(
-                        AudioManager.STREAM_MUSIC,
-                        (maxVolume - volume.floatValue).toInt(),
-                        0
-                    )
-                }
-            }
-            .pointerInput(Unit) {
-                detectTapGestures(
-                    onTap = { onTap() },
-                    onDoubleTap = {
-                        player.seekBack()
-                        sliderPosition.floatValue = player.currentPosition.toFloat()
-                        addControlHandler()
-                    })
+        // Left: Volume Gesture Listener
+        GestureView(
+            flagState = showVolume,
+            previousState = volume,
+            alignment = Alignment.CenterStart,
+            onDrag = {
+                audioManager.setStreamVolume(
+                    AudioManager.STREAM_MUSIC,
+                    16 - volume.floatValue.toInt(),
+                    0
+                )
+            },
+            onTap = { onTap() },
+            onDoubleTap = {
+                player.seekBack()
+                sliderPosition.floatValue = player.currentPosition.toFloat()
+                addControlHandler()
             }
         )
 
+        // Volume Slider
         if (showVolume.value) {
-            Box(
-                modifier = Modifier
-                    .width(45.dp)
-                    .height(200.dp)
-                    .offset(x = (-50).dp)
-                    .clip(RoundedCornerShape(40.dp))
-                    .background(LocalColor.Monochrome.White)
-                    .align(Alignment.CenterEnd)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .fillMaxHeight(fraction = 1F - volume.floatValue / maxVolume)
-                        .background(
-                            LocalColor.Teal
-                        )
-                        .align(Alignment.BottomCenter)
-                )
-
-                val lowVolume = (maxVolume - volume.floatValue) <= 3F
-                Icon(
-                    painter = painterResource(id = if (lowVolume) R.drawable.music_off else R.drawable.music_note),
-                    contentDescription = null,
-                    tint = if (lowVolume) LocalColor.Monochrome.Black else LocalColor.Monochrome.White,
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .padding(bottom = 10.dp)
-                )
-            }
+            SwipeControl(
+                state = volume,
+                alignment = Alignment.CenterEnd,
+                modifier = Modifier.offset(x = (-50).dp),
+                isBrightnessControl = false
+            )
         }
 
-        Box(modifier = Modifier
-            .fillMaxHeight()
-            .fillMaxWidth(fraction = 0.3F)
-            .align(Alignment.CenterEnd)
-            .pointerInput(Unit) {
-                detectVerticalDragGestures(
-                    onDragStart = { showBrightness.value = true },
-                    onDragEnd = { showBrightness.value = false },
-                    onDragCancel = { showBrightness.value = false }
-                ) { _, dragAmount ->
-                    brightness.floatValue += dragAmount / 4F
-                    if (brightness.floatValue < 0) {
-                        brightness.floatValue = 0F
-                    } else if (brightness.floatValue > 100F) {
-                        brightness.floatValue = 100F
-                    }
+        // Right: Brightness Listener
+        GestureView(
+            flagState = showBrightness,
+            previousState = brightness,
+            alignment = Alignment.CenterEnd,
+            onDrag = {
+                val attributes = activityContext.window.attributes
+                attributes.screenBrightness = 16F - brightness.floatValue
 
-                    val attributes = activityContext.window.attributes
-                    attributes.screenBrightness = 1F - brightness.floatValue / 100F
-
-                    activityContext.window.attributes = attributes
-                }
-            }
-            .pointerInput(Unit) {
-                detectTapGestures(
-                    onTap = { onTap() },
-                    onDoubleTap = {
-                        player.seekForward()
-                        sliderPosition.floatValue = player.currentPosition.toFloat()
-                        addControlHandler()
-                    })
+                activityContext.window.attributes = attributes
+            },
+            onTap = { onTap() },
+            onDoubleTap = {
+                player.seekForward()
+                sliderPosition.floatValue = player.currentPosition.toFloat()
+                addControlHandler()
             }
         )
 
@@ -365,4 +284,98 @@ fun MediaControls(
         }
 
     }
+}
+
+
+@Composable
+fun BoxScope.SwipeControl(
+    modifier: Modifier,
+    state: MutableFloatState,
+    alignment: Alignment,
+    isBrightnessControl: Boolean
+) {
+    Box(
+        modifier = Modifier
+            .width(45.dp)
+            .height(200.dp)
+            .then(modifier)
+            .clip(RoundedCornerShape(40.dp))
+            .background(LocalColor.Monochrome.White)
+            .align(alignment)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .fillMaxHeight(fraction = 1F - state.floatValue / 16F)
+                .background(
+                    LocalColor.Teal
+                )
+                .align(Alignment.BottomCenter)
+        )
+
+        val normal = remember {
+            if (isBrightnessControl) {
+                R.drawable.light_mode
+            } else {
+                R.drawable.music_note
+            }
+        }
+
+        val off = remember {
+            if (isBrightnessControl) {
+                R.drawable.brightness_empty
+            } else {
+                R.drawable.music_off
+            }
+        }
+
+        val low = (16F - state.floatValue) <= 3F
+        Icon(
+            painter = painterResource(id = if (low) off else normal),
+            contentDescription = null,
+            tint = if (low) LocalColor.Monochrome.Black else LocalColor.Monochrome.White,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 10.dp)
+
+        )
+    }
+}
+
+@Composable
+fun BoxScope.GestureView(
+    flagState: MutableState<Boolean>,
+    previousState: MutableFloatState,
+    alignment: Alignment,
+    onDrag: () -> Unit,
+    onTap: () -> Unit,
+    onDoubleTap: () -> Unit
+) {
+    Box(modifier = Modifier
+        .fillMaxHeight()
+        .fillMaxWidth(fraction = 0.3F)
+        .align(alignment)
+        .pointerInput(Unit) {
+            detectVerticalDragGestures(
+                onDragStart = { flagState.value = true },
+                onDragEnd = { flagState.value = false },
+                onDragCancel = { flagState.value = false }
+            ) { _, dragAmount ->
+                previousState.floatValue += dragAmount / 24F
+
+                if (previousState.floatValue < 0F) {
+                    previousState.floatValue = 0F
+                } else if (previousState.floatValue > 16F) {
+                    previousState.floatValue = 16F
+                }
+
+                onDrag()
+            }
+        }
+        .pointerInput(Unit) {
+            detectTapGestures(
+                onTap = { onTap() },
+                onDoubleTap = { onDoubleTap() })
+        }
+    )
 }
