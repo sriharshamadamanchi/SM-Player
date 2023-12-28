@@ -176,7 +176,7 @@ fun MediaControls(
             alignment = Alignment.CenterEnd,
             onDrag = {
                 val attributes = activityContext.window.attributes
-                attributes.screenBrightness = 16F - brightness.floatValue
+                attributes.screenBrightness = (16F - brightness.floatValue) / 16F
 
                 activityContext.window.attributes = attributes
             },
@@ -363,13 +363,8 @@ fun BoxScope.GestureView(
                 onDragEnd = { flagState.value = false },
                 onDragCancel = { flagState.value = false }
             ) { _, dragAmount ->
-                previousState.floatValue += dragAmount / 24F
-
-                if (previousState.floatValue < 0F) {
-                    previousState.floatValue = 0F
-                } else if (previousState.floatValue > 16F) {
-                    previousState.floatValue = 16F
-                }
+                previousState.floatValue += dragAmount / 32F
+                previousState.floatValue = previousState.floatValue.coerceIn(0F, 16F)
 
                 onDrag()
             }
