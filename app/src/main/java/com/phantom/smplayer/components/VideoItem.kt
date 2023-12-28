@@ -9,6 +9,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -22,6 +23,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import com.phantom.smplayer.convertMillisecondsToHHmmss
 import com.phantom.smplayer.ui.theme.LocalColor
 
 @RequiresApi(Build.VERSION_CODES.Q)
@@ -66,11 +68,12 @@ fun VideoItem(
                 m = true,
                 ellipsis = true
             )
-//            Label(
-//                title = formatDuration(duration.toLong()),
-//                contentColor = LocalColor.Monochrome.Medium,
-//                s = true
-//            )
+            Spacer(modifier = Modifier.height(5.dp))
+            Label(
+                title = convertMillisecondsToHHmmss(duration.toLong()),
+                contentColor = LocalColor.Monochrome.Medium,
+                s = true
+            )
         }
     }
 }

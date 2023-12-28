@@ -19,7 +19,6 @@ import androidx.media3.common.Player.REPEAT_MODE_OFF
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.ExoPlayer
-import androidx.media3.exoplayer.SeekParameters
 import androidx.media3.ui.PlayerView
 import com.phantom.smplayer.MainActivity
 import com.phantom.smplayer.ui.theme.LocalColor
@@ -49,9 +48,10 @@ fun VidePlayer() {
 
         ExoPlayer.Builder(context)
             .setLoadControl(loadControl)
+            .setSeekBackIncrementMs(10000)
+            .setSeekForwardIncrementMs(10000)
             .build()
             .apply {
-                setSeekParameters(SeekParameters(10000, 10000))
                 setMediaItem(mediaItem)
                 prepare()
                 playWhenReady = false

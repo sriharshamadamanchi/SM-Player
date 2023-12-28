@@ -14,11 +14,13 @@ import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -26,7 +28,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.MutableFloatState
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableFloatStateOf
@@ -42,7 +44,9 @@ import androidx.compose.ui.unit.dp
 import androidx.media3.exoplayer.ExoPlayer
 import com.phantom.smplayer.MainActivity
 import com.phantom.smplayer.R
+import com.phantom.smplayer.components.Label
 import com.phantom.smplayer.components.SeekBar
+import com.phantom.smplayer.convertMillisecondsToHHmmss
 import com.phantom.smplayer.data.Video
 import com.phantom.smplayer.ui.theme.LocalColor
 
@@ -100,7 +104,7 @@ fun MediaControls(
     val removeControlCallback = { controlsHandler.removeCallbacks(controlsListener) }
     val addControlDelay = { controlsHandler.postDelayed(controlsListener, 5000) }
 
-    LaunchedEffect(player) {
+    DisposableEffect(player) {
         addControlDelay()
 
         val handler = Handler(Looper.getMainLooper())
@@ -116,6 +120,8 @@ fun MediaControls(
         }
 
         handler.postDelayed(listener, 1000)
+
+        onDispose { handler.removeCallbacks(listener) }
     }
 
     fun onTap() {
@@ -273,21 +279,43 @@ fun MediaControls(
             enter = fadeIn(),
             exit = fadeOut()
         ) {
-            SeekBar(
-                minimumValue = 0F,
-                maximumValue = video?.duration?.toFloat() ?: 100F,
-                sliderValue = sliderPosition.floatValue,
-                onSlidingComplete = {
-                    sliding.value = false
-                    addControlDelay()
-                    player.seekTo(sliderPosition.floatValue.toLong())
-                },
-                onValueChange = {
-                    sliding.value = true
-                    removeControlCallback()
-                    sliderPosition.floatValue = it
+            Column {
+                SeekBar(
+                    minimumValue = 0F,
+                    maximumValue = video?.duration?.toFloat() ?: 100F,
+                    sliderValue = sliderPosition.floatValue,
+                    onSlidingComplete = {
+                        sliding.value = false
+                        addControlDelay()
+                        player.seekTo(sliderPosition.floatValue.toLong())
+                    },
+                    onValueChange = {
+                        sliding.value = true
+                        removeControlCallback()
+                        sliderPosition.floatValue = it
+                    }
+                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .offset(y = (-10).dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Label(
+                        title = convertMillisecondsToHHmmss(sliderPosition.floatValue.toLong()),
+                        white = true,
+                        semiBold = true,
+                        m = true
+                    )
+
+                    Label(
+                        title = convertMillisecondsToHHmmss(video?.duration?.toLong() ?: 100L),
+                        white = true,
+                        semiBold = true,
+                        m = true
+                    )
                 }
-            )
+            }
         }
 
     }
