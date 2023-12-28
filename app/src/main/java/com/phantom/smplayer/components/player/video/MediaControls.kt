@@ -74,9 +74,11 @@ fun MediaControls(
         mutableStateOf(false)
     }
 
-    val controlsHandler = Handler(Looper.getMainLooper())
-    val controlsListener = Runnable {
-        showControls.value = false
+    val controlsHandler = remember { Handler(Looper.getMainLooper()) }
+    val controlsListener = remember {
+        Runnable {
+            showControls.value = false
+        }
     }
 
     val audioManager = remember {
@@ -91,15 +93,24 @@ fun MediaControls(
         mutableStateOf(false)
     }
 
+    val sliding = remember {
+        mutableStateOf(false)
+    }
+
+    val removeControlCallback = { controlsHandler.removeCallbacks(controlsListener) }
+    val addControlDelay = { controlsHandler.postDelayed(controlsListener, 5000) }
+
     LaunchedEffect(player) {
-        controlsHandler.postDelayed(controlsListener, 10000)
+        addControlDelay()
 
         val handler = Handler(Looper.getMainLooper())
 
         val listener = object : Runnable {
             override fun run() {
-                val currentPosition = player.currentPosition.toFloat()
-                sliderPosition.floatValue = currentPosition
+                if (!sliding.value) {
+                    val currentPosition = player.currentPosition.toFloat()
+                    sliderPosition.floatValue = currentPosition
+                }
                 handler.postDelayed(this, 1000)
             }
         }
@@ -107,28 +118,30 @@ fun MediaControls(
         handler.postDelayed(listener, 1000)
     }
 
-    fun addControlHandler() {
-        controlsHandler.removeCallbacks(controlsListener)
-        controlsHandler.postDelayed(controlsListener, 10000)
+    fun onTap() {
+        removeControlCallback()
+        if (!showControls.value) {
+            addControlDelay()
+        }
+        showControls.value = !showControls.value
     }
 
-    fun onTap() {
-        if (showControls.value) {
-            showControls.value = false
-            controlsHandler.removeCallbacks(controlsListener)
+    fun onDoubleTap(forward: Boolean) {
+        if (forward) {
+            player.seekForward()
         } else {
-            showControls.value = true
-            addControlHandler()
+            player.seekBack()
         }
+        sliderPosition.floatValue = player.currentPosition.toFloat()
+        removeControlCallback()
+        addControlDelay()
     }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
             .pointerInput(Unit) {
-                detectTapGestures(onTap = {
-                    onTap()
-                })
+                detectTapGestures(onTap = { onTap() })
             }
     ) {
 
@@ -155,11 +168,7 @@ fun MediaControls(
                 )
             },
             onTap = { onTap() },
-            onDoubleTap = {
-                player.seekBack()
-                sliderPosition.floatValue = player.currentPosition.toFloat()
-                addControlHandler()
-            }
+            onDoubleTap = { onDoubleTap(forward = false) }
         )
 
         // Volume Slider
@@ -184,11 +193,7 @@ fun MediaControls(
                 activityContext.window.attributes = attributes
             },
             onTap = { onTap() },
-            onDoubleTap = {
-                player.seekForward()
-                sliderPosition.floatValue = player.currentPosition.toFloat()
-                addControlHandler()
-            }
+            onDoubleTap = { onDoubleTap(forward = true) }
         )
 
         AnimatedVisibility(
@@ -219,7 +224,6 @@ fun MediaControls(
                         .clickable {
                             player.seekBack()
                             sliderPosition.floatValue = player.currentPosition.toFloat()
-                            addControlHandler()
                         }
                 )
                 Icon(
@@ -236,8 +240,6 @@ fun MediaControls(
                             }
 
                             playing.value = !playing.value
-
-                            addControlHandler()
                         }
                 )
                 Icon(
@@ -249,7 +251,6 @@ fun MediaControls(
                         .clickable {
                             player.seekForward()
                             sliderPosition.floatValue = player.currentPosition.toFloat()
-                            addControlHandler()
                         }
                 )
                 Icon(
@@ -274,11 +275,15 @@ fun MediaControls(
                 minimumValue = 0F,
                 maximumValue = video?.duration?.toFloat() ?: 100F,
                 sliderValue = sliderPosition.floatValue,
-                onSlidingComplete = { controlsHandler.postDelayed(controlsListener, 10000) },
+                onSlidingComplete = {
+                    sliding.value = false
+                    addControlDelay()
+                    player.seekTo(sliderPosition.floatValue.toLong())
+                },
                 onValueChange = {
-                    player.seekTo(it.toLong())
+                    sliding.value = true
+                    removeControlCallback()
                     sliderPosition.floatValue = it
-                    controlsHandler.removeCallbacks(controlsListener)
                 }
             )
         }
@@ -356,6 +361,11 @@ fun BoxScope.GestureView(
         .fillMaxWidth(fraction = 0.3F)
         .align(alignment)
         .pointerInput(Unit) {
+            detectTapGestures(
+                onTap = { onTap() },
+                onDoubleTap = { onDoubleTap() })
+        }
+        .pointerInput(Unit) {
             detectVerticalDragGestures(
                 onDragStart = { flagState.value = true },
                 onDragEnd = { flagState.value = false },
@@ -371,11 +381,6 @@ fun BoxScope.GestureView(
 
                 onDrag()
             }
-        }
-        .pointerInput(Unit) {
-            detectTapGestures(
-                onTap = { onTap() },
-                onDoubleTap = { onDoubleTap() })
         }
     )
 }

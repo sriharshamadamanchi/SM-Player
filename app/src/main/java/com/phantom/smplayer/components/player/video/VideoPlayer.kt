@@ -62,7 +62,7 @@ fun VidePlayer() {
 
     DisposableEffect(Unit) {
         val activity = context as MainActivity
-        activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE
+        activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE
 
         context.window.setFlags(
             WindowManager.LayoutParams.FLAG_FULLSCREEN,
