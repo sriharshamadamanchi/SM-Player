@@ -1,7 +1,6 @@
 package com.phantom.smplayer.components.player.video
 
 import android.os.Bundle
-import android.util.Log
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -66,7 +65,6 @@ class VideoActivity : ComponentActivity() {
                         exoPlayer = exoPlayer,
                         video = video
                     ) {
-                        Log.i("Harsha", "Finish")
                         finish()
                     }
                 }
@@ -82,5 +80,10 @@ class VideoActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         exoPlayer?.play()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        exoPlayer?.release()
     }
 }
