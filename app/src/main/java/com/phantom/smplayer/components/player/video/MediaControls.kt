@@ -42,8 +42,8 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import androidx.media3.exoplayer.ExoPlayer
-import com.phantom.smplayer.MainActivity
 import com.phantom.smplayer.R
 import com.phantom.smplayer.components.Label
 import com.phantom.smplayer.components.SeekBar
@@ -54,10 +54,11 @@ import com.phantom.smplayer.ui.theme.LocalColor
 @Composable
 fun MediaControls(
     player: ExoPlayer,
-    video: Video?
+    video: Video,
+    onNavigateBack: () -> Unit
 ) {
 
-    val activityContext = LocalContext.current as MainActivity
+    val activityContext = LocalContext.current as VideoActivity
 
     val showControls = remember {
         mutableStateOf(true)
@@ -161,6 +162,37 @@ fun MediaControls(
                 }
             }
     ) {
+
+        AnimatedVisibility(
+            visible = showControls.value,
+            modifier = Modifier
+                .fillMaxWidth(fraction = 0.5F)
+                .padding(20.dp)
+                .zIndex(1F),
+            enter = fadeIn(),
+            exit = fadeOut()
+        ) {
+            Row {
+                Icon(
+                    painter = painterResource(id = R.drawable.arrow_back),
+                    contentDescription = null,
+                    tint = LocalColor.Monochrome.White,
+                    modifier = Modifier
+                        .clip(CircleShape)
+                        .padding(10.dp)
+                        .clickable { onNavigateBack() }
+
+                )
+                Label(
+                    title = video.name,
+                    white = true,
+                    semiBold = true,
+                    m = true,
+                    maxLines = 2,
+                    modifier = Modifier.offset(y = 10.dp)
+                )
+            }
+        }
 
         // Left: Volume Gesture Listener
         GestureView(
@@ -293,7 +325,7 @@ fun MediaControls(
             Column {
                 SeekBar(
                     minimumValue = 0F,
-                    maximumValue = video?.duration?.toFloat() ?: 100F,
+                    maximumValue = video.duration.toFloat(),
                     sliderValue = sliderPosition.floatValue,
                     onSlidingComplete = {
                         sliding.value = false
@@ -320,7 +352,7 @@ fun MediaControls(
                     )
 
                     Label(
-                        title = convertMillisecondsToHHmmss(video?.duration?.toLong() ?: 100L),
+                        title = convertMillisecondsToHHmmss(video.duration.toLong()),
                         white = true,
                         semiBold = true,
                         m = true

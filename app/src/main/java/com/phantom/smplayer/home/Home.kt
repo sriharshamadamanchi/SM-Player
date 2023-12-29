@@ -15,7 +15,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.phantom.smplayer.components.player.video.VidePlayer
 
 @RequiresApi(Build.VERSION_CODES.Q)
 @Composable
@@ -42,12 +41,6 @@ fun Home() {
             ) {
                 val directory = it.arguments?.getString("directory") ?: ""
                 Directory(navController = navController, directory = directory)
-            }
-
-            composable(
-                "video-player",
-            ) {
-                VidePlayer()
             }
         }
     }

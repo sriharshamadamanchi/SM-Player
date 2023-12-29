@@ -9,7 +9,6 @@ import java.io.File
 class MainViewModel : ViewModel() {
 
     private val _videoDirectories = MutableLiveData<Map<File, List<Video>>>()
-    private val _selectedVideo = MutableLiveData<Video>()
 
     fun updateVideoDirectories(videoDirectories: Map<File, List<Video>>) {
         _videoDirectories.postValue(videoDirectories)
@@ -17,13 +16,5 @@ class MainViewModel : ViewModel() {
 
     fun getVideoDirectories(): LiveData<Map<File, List<Video>>> {
         return _videoDirectories
-    }
-
-    fun setSelectedVideo(video: Video) {
-        _selectedVideo.value = video
-    }
-
-    fun getSelectedVideo(): Video? {
-        return _selectedVideo.value
     }
 }

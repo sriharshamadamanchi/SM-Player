@@ -8,6 +8,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
+import android.util.Log
 import android.view.View
 import android.view.animation.AnticipateInterpolator
 import androidx.activity.ComponentActivity
@@ -82,6 +83,9 @@ class MainActivity : ComponentActivity() {
             slideUp.start()
         }
 
+        Log.i("Harsha", "Load Videos")
+        VideoDirectoryScanner(this).loadMedia()
+
         setContent {
             SMPlayerTheme {
                 Surface(
@@ -89,7 +93,6 @@ class MainActivity : ComponentActivity() {
                     color = LocalColor.Base
                 ) {
                     if (permissionsGiven.intValue == PackageManager.PERMISSION_GRANTED) {
-                        VideoDirectoryScanner(this).loadMedia()
                         Home()
                     } else {
                         NoPermissions {

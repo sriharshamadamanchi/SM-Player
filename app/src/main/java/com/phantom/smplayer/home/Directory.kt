@@ -1,5 +1,6 @@
 package com.phantom.smplayer.home
 
+import android.content.Intent
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
@@ -19,6 +20,7 @@ import androidx.navigation.NavHostController
 import com.phantom.smplayer.MainActivity
 import com.phantom.smplayer.components.Header
 import com.phantom.smplayer.components.VideoItem
+import com.phantom.smplayer.components.player.video.VideoActivity
 import com.phantom.smplayer.data.Video
 import com.phantom.smplayer.ui.theme.LocalColor
 import com.phantom.smplayer.viewmodel.MainViewModel
@@ -29,6 +31,8 @@ fun Directory(
     navController: NavHostController,
     directory: String
 ) {
+
+    val context = LocalContext.current
 
     val mainViewModel: MainViewModel =
         viewModel(viewModelStoreOwner = LocalContext.current as MainActivity)
@@ -69,8 +73,9 @@ fun Directory(
                     VideoItem(
                         video = it
                     ) {
-                        mainViewModel.setSelectedVideo(it)
-                        navController.navigate("video-player")
+                        val intent = Intent(context, VideoActivity::class.java)
+                        intent.putExtra("video", it)
+                        context.startActivity(intent)
                     }
                 }
             }
