@@ -67,9 +67,7 @@ fun Directory(
             LazyColumn() {
                 items(videos) {
                     VideoItem(
-                        videoUri = it.uri,
-                        videoName = it.name,
-                        duration = it.duration
+                        video = it
                     ) {
                         mainViewModel.setSelectedVideo(it)
                         navController.navigate("video-player")

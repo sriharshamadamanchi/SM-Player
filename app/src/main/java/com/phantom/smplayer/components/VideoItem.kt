@@ -1,9 +1,6 @@
 package com.phantom.smplayer.components
 
-import android.graphics.Bitmap
-import android.net.Uri
 import android.os.Build
-import android.util.Size
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -21,17 +18,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.phantom.smplayer.convertMillisecondsToHHmmss
+import com.phantom.smplayer.data.Video
 import com.phantom.smplayer.ui.theme.LocalColor
 
 @RequiresApi(Build.VERSION_CODES.Q)
 @Composable
 fun VideoItem(
-    videoUri: Uri,
-    videoName: String,
-    duration: Int,
+    video: Video,
     onClick: () -> Unit
 ) {
 
@@ -45,13 +40,8 @@ fun VideoItem(
         verticalAlignment = Alignment.CenterVertically
     ) {
 
-        val thumbnail: Bitmap =
-            LocalContext.current.contentResolver.loadThumbnail(
-                videoUri, Size(480, 480), null
-            )
-
         Image(
-            bitmap = thumbnail.asImageBitmap(),
+            bitmap = video.thumbnail.asImageBitmap(),
             contentDescription = null,
             modifier = Modifier
                 .width(120.dp)
@@ -62,7 +52,7 @@ fun VideoItem(
 
         Column(modifier = Modifier.padding(horizontal = 10.dp)) {
             Label(
-                title = videoName,
+                title = video.name,
                 contentColor = LocalColor.Monochrome.Light,
                 maxLines = 3,
                 m = true,
@@ -70,7 +60,7 @@ fun VideoItem(
             )
             Spacer(modifier = Modifier.height(5.dp))
             Label(
-                title = convertMillisecondsToHHmmss(duration.toLong()),
+                title = convertMillisecondsToHHmmss(video.duration.toLong()),
                 contentColor = LocalColor.Monochrome.Medium,
                 s = true
             )

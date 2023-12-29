@@ -3,8 +3,11 @@ package com.phantom.smplayer.home
 import android.content.ContentUris
 import android.content.Context
 import android.net.Uri
+import android.os.Build
 import android.provider.MediaStore
 import android.util.Log
+import android.util.Size
+import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModelProvider
 import com.phantom.smplayer.MainActivity
 import com.phantom.smplayer.data.Video
@@ -16,6 +19,7 @@ class VideoDirectoryScanner(private val context: Context) {
     private val mainViewModel =
         ViewModelProvider(context as MainActivity)[MainViewModel::class.java]
 
+    @RequiresApi(Build.VERSION_CODES.Q)
     fun loadMedia() {
         val videoMap = mutableMapOf<File, MutableList<Video>>()
 
@@ -25,7 +29,7 @@ class VideoDirectoryScanner(private val context: Context) {
             MediaStore.Video.Media.DATA,
             MediaStore.Video.Media._ID,
             MediaStore.Video.Media.TITLE,
-            MediaStore.Video.Media.DURATION,
+            MediaStore.Video.Media.DURATION
         )
 
         contentResolver.query(
@@ -59,7 +63,11 @@ class VideoDirectoryScanner(private val context: Context) {
                         id
                     )
 
-                    videoMap[videoDirectory]?.add(Video(contentUri, name, duration))
+                    val thumbnail = contentResolver.loadThumbnail(
+                        contentUri, Size(480, 480), null
+                    )
+
+                    videoMap[videoDirectory]?.add(Video(contentUri, name, duration, thumbnail))
                 }
             }
 
