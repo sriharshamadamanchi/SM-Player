@@ -40,16 +40,14 @@ fun Directory(
     val videosList = mainViewModel.getVideoDirectories().observeAsState().value ?: emptyMap()
 
     val videos = remember {
-        mutableListOf<Video>()
-    }
-
-    videos.clear()
-
-    videosList.map {
-        if (it.key.name == directory) {
-            videos.addAll(it.value.sortedBy { video -> video.name })
-            return@map
+        val list = mutableListOf<Video>()
+        videosList.forEach { (a, b) ->
+            if (a.name == directory) {
+                list.addAll(b.sortedBy { video -> video.name })
+                return@forEach
+            }
         }
+        list
     }
 
     Scaffold(
@@ -68,7 +66,7 @@ fun Directory(
                 .padding(innerPadding)
                 .background(LocalColor.Base)
         ) {
-            LazyColumn() {
+            LazyColumn {
                 items(videos) {
                     VideoItem(
                         video = it

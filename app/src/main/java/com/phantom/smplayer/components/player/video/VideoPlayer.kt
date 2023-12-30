@@ -11,6 +11,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
+import com.phantom.smplayer.components.player.video.controls.MediaControls
 import com.phantom.smplayer.data.Video
 import com.phantom.smplayer.ui.theme.LocalColor
 
