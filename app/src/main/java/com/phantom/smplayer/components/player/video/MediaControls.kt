@@ -4,11 +4,13 @@ import android.content.Context
 import android.media.AudioManager
 import android.os.Handler
 import android.os.Looper
+import androidx.annotation.OptIn
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
@@ -17,6 +19,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -25,6 +28,8 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
@@ -38,18 +43,32 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import androidx.media3.common.TrackSelectionOverride
+import androidx.media3.common.Tracks.Group
+import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import com.phantom.smplayer.R
 import com.phantom.smplayer.components.Label
+import com.phantom.smplayer.components.RadioButton
 import com.phantom.smplayer.components.SeekBar
+import com.phantom.smplayer.components.interaction.NoRippleInteractionSource
 import com.phantom.smplayer.convertMillisecondsToHHmmss
 import com.phantom.smplayer.data.Video
 import com.phantom.smplayer.ui.theme.LocalColor
+import java.util.Locale
+
+
+enum class Settings {
+    NONE,
+    AUDIO,
+    SUBTITLES
+}
 
 @Composable
 fun MediaControls(
@@ -104,7 +123,11 @@ fun MediaControls(
     }
 
     val removeControlCallback = { controlsHandler.removeCallbacks(controlsListener) }
-    val addControlDelay = { controlsHandler.postDelayed(controlsListener, 5000) }
+    val addControlDelay = { controlsHandler.postDelayed(controlsListener, 10000) }
+
+    val settings = remember {
+        mutableStateOf(Settings.NONE)
+    }
 
     DisposableEffect(player) {
         addControlDelay()
@@ -149,7 +172,10 @@ fun MediaControls(
         modifier = Modifier
             .fillMaxSize()
             .pointerInput(Unit) {
-                detectTapGestures(onTap = { onTap() })
+                detectTapGestures(onTap = {
+                    onTap()
+                    settings.value = Settings.NONE
+                })
             }
             .pointerInput(Unit) {
                 detectHorizontalDragGestures(
@@ -166,31 +192,87 @@ fun MediaControls(
         AnimatedVisibility(
             visible = showControls.value,
             modifier = Modifier
-                .fillMaxWidth(fraction = 0.5F)
-                .padding(20.dp)
+                .fillMaxWidth()
+                .padding(horizontal = 5.dp, vertical = 20.dp)
                 .zIndex(1F),
             enter = fadeIn(),
             exit = fadeOut()
         ) {
             Row {
-                Icon(
-                    painter = painterResource(id = R.drawable.arrow_back),
-                    contentDescription = null,
-                    tint = LocalColor.Monochrome.White,
+                Row(
                     modifier = Modifier
-                        .clip(CircleShape)
-                        .padding(10.dp)
-                        .clickable { onNavigateBack() }
+                        .fillMaxWidth(fraction = 0.5F)
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.arrow_back),
+                        contentDescription = null,
+                        tint = LocalColor.Monochrome.White,
+                        modifier = Modifier
+                            .padding(10.dp)
+                            .clickable(
+                                interactionSource = NoRippleInteractionSource(), null
+                            ) { onNavigateBack() }
+                    )
+                    Label(
+                        title = video.name,
+                        white = true,
+                        semiBold = true,
+                        m = true,
+                        maxLines = 2,
+                        modifier = Modifier.offset(y = 10.dp)
+                    )
+                }
 
-                )
-                Label(
-                    title = video.name,
-                    white = true,
-                    semiBold = true,
-                    m = true,
-                    maxLines = 2,
-                    modifier = Modifier.offset(y = 10.dp)
-                )
+                Box(
+                    modifier = Modifier.fillMaxWidth(fraction = 0.8F),
+                    contentAlignment = Alignment.CenterEnd
+                ) {
+                    Row {
+                        Icon(
+                            painter = painterResource(id = R.drawable.subtitles),
+                            contentDescription = null,
+                            tint = LocalColor.Monochrome.White,
+                            modifier = Modifier
+                                .padding(10.dp)
+                                .clickable(
+                                    interactionSource = NoRippleInteractionSource(), null
+                                ) {
+                                    settings.value = Settings.SUBTITLES
+                                }
+                        )
+
+                        Spacer(modifier = Modifier.width(10.dp))
+
+                        Icon(
+                            painter = painterResource(id = R.drawable.music_note),
+                            contentDescription = null,
+                            tint = LocalColor.Monochrome.White,
+                            modifier = Modifier
+                                .padding(10.dp)
+                                .clickable(
+                                    interactionSource = NoRippleInteractionSource(), null
+                                ) {
+                                    settings.value = Settings.AUDIO
+                                }
+
+                        )
+                    }
+                }
+
+            }
+        }
+
+        AnimatedVisibility(
+            visible = (settings.value != Settings.NONE),
+            modifier = Modifier
+                .width(300.dp)
+                .align(Alignment.CenterEnd)
+                .zIndex(1F),
+            enter = fadeIn(),
+            exit = fadeOut()
+        ) {
+            TrackSelection(player = player, isAudio = settings.value == Settings.AUDIO) {
+                settings.value = Settings.NONE
             }
         }
 
@@ -451,5 +533,122 @@ fun BoxScope.GestureView(
         contentAlignment = Alignment.Center
     ) {
         content()
+    }
+}
+
+@OptIn(UnstableApi::class)
+@Composable
+fun TrackSelection(
+    player: ExoPlayer,
+    isAudio: Boolean,
+    onClose: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .pointerInput(Unit) {
+                detectDragGestures { _, _ -> }
+            }
+            .pointerInput(Unit) {
+                detectTapGestures { }
+            }
+            .background(
+                brush = Brush.verticalGradient(
+                    listOf(
+                        LocalColor.Monochrome.White,
+                        LocalColor.Monochrome.Regular
+                    )
+                )
+            ),
+    ) {
+        val trackGroups = remember {
+            mutableListOf<Group>()
+        }
+
+        val selectedTrack = remember {
+            mutableStateOf("")
+        }
+        trackGroups.clear()
+        for (trackGroup in player.currentTracks.groups) {
+            trackGroups.addAll((0 until trackGroup.length)
+                .filter {
+                    trackGroup.isTrackSupported(it) && trackGroup.getTrackFormat(it).language != "und" && trackGroup.getTrackFormat(
+                        it
+                    ).sampleMimeType?.startsWith(
+                        "audio/"
+                    ) == isAudio
+                }
+                .map {
+                    if (trackGroup.isTrackSelected(it)) {
+                        selectedTrack.value = trackGroup.mediaTrackGroup.id + it
+                    }
+                    trackGroup
+                }
+            )
+        }
+
+        Column {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.close), contentDescription = null,
+                    modifier = Modifier
+                        .padding(10.dp)
+                        .clickable {
+                            onClose()
+                        }
+                )
+                Label(
+                    title = if (isAudio) "Audio" else "Subtitles",
+                    semiBold = true,
+                    xl18 = true,
+                    center = true,
+                    contentColor = LocalColor.Base,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(10.dp)
+                        .offset(x = (-10).dp)
+                )
+            }
+            LazyColumn {
+                items(trackGroups) { trackGroup ->
+                    repeat(trackGroup.length) { index ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    player.trackSelectionParameters =
+                                        player.trackSelectionParameters
+                                            .buildUpon()
+                                            .setOverrideForType(
+                                                TrackSelectionOverride(
+                                                    trackGroup.mediaTrackGroup,
+                                                    index
+                                                )
+                                            )
+                                            .build()
+                                    selectedTrack.value = trackGroup.mediaTrackGroup.id + index
+
+                                },
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = selectedTrack.value == (trackGroup.mediaTrackGroup.id + index)
+                            )
+                            Label(
+                                title = "${trackGroup.getTrackFormat(index).label} - " + Locale(
+                                    trackGroup.getTrackFormat(index).language ?: "und"
+                                ).displayName,
+                                maxLines = 2,
+                                m = true,
+                                contentColor = LocalColor.Base,
+                                ellipsis = true
+                            )
+                        }
+                    }
+                }
+            }
+        }
     }
 }
