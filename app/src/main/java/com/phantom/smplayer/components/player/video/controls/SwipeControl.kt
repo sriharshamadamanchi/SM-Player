@@ -30,7 +30,7 @@ fun BoxScope.SwipeControl(
         modifier = Modifier
             .width(45.dp)
             .height(200.dp)
-            .clip(RoundedCornerShape(40.dp))
+            .clip(RoundedCornerShape(45.dp))
             .background(LocalColor.Monochrome.Dark.copy(alpha = 0.5F))
             .align(Alignment.Center)
     ) {
