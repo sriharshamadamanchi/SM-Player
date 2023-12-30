@@ -196,7 +196,10 @@ fun MediaControls(
             enter = fadeIn(),
             exit = fadeOut()
         ) {
-            TrackSelection(player = player, isAudio = mediaState.settings.value == Settings.AUDIO) {
+            TrackSelection(
+                player = player,
+                isAudio = mediaState.settings.value == Settings.AUDIO
+            ) {
                 mediaState.settings.value = Settings.NONE
             }
         }

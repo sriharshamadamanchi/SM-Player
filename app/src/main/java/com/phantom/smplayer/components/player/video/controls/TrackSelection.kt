@@ -14,12 +14,14 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.painterResource
@@ -44,6 +46,7 @@ fun TrackSelection(
     Box(
         modifier = Modifier
             .fillMaxSize()
+            .clip(RoundedCornerShape(topStart = 10.dp, bottomStart = 10.dp))
             .pointerInput(Unit) {
                 detectDragGestures { _, _ -> }
             }
@@ -70,11 +73,10 @@ fun TrackSelection(
         for (trackGroup in player.currentTracks.groups) {
             trackGroups.addAll((0 until trackGroup.length)
                 .filter {
-                    trackGroup.isTrackSupported(it) && trackGroup.getTrackFormat(it).language != "und" && trackGroup.getTrackFormat(
-                        it
-                    ).sampleMimeType?.startsWith(
-                        "audio/"
-                    ) == isAudio
+                    trackGroup.isTrackSupported(it) &&
+                            trackGroup.getTrackFormat(it).language != null &&
+                            trackGroup.getTrackFormat(it).language != "und" &&
+                            trackGroup.getTrackFormat(it).sampleMimeType?.startsWith("audio/") == isAudio
                 }
                 .map {
                     if (trackGroup.isTrackSelected(it)) {
@@ -87,7 +89,9 @@ fun TrackSelection(
 
         Column {
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 10.dp),
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.close), contentDescription = null,
@@ -109,44 +113,60 @@ fun TrackSelection(
                         .offset(x = (-10).dp)
                 )
             }
-            LazyColumn {
-                items(trackGroups) { trackGroup ->
-                    repeat(trackGroup.length) { index ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    player.trackSelectionParameters =
-                                        player.trackSelectionParameters
-                                            .buildUpon()
-                                            .setOverrideForType(
-                                                TrackSelectionOverride(
-                                                    trackGroup.mediaTrackGroup,
-                                                    index
-                                                )
-                                            )
-                                            .build()
-                                    selectedTrack.value = trackGroup.mediaTrackGroup.id + index
-
-                                },
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            RadioButton(
-                                selected = selectedTrack.value == (trackGroup.mediaTrackGroup.id + index)
-                            )
-                            Label(
+            if (trackGroups.isEmpty()) {
+                MediaTrack(isTrackSelected = true, title = "Default")
+            } else {
+                LazyColumn {
+                    items(trackGroups) { trackGroup ->
+                        repeat(trackGroup.length) { index ->
+                            MediaTrack(
+                                isTrackSelected = selectedTrack.value == (trackGroup.mediaTrackGroup.id + index),
                                 title = "${trackGroup.getTrackFormat(index).label} - " + Locale(
-                                    trackGroup.getTrackFormat(index).language ?: "und"
-                                ).displayName,
-                                maxLines = 2,
-                                m = true,
-                                contentColor = LocalColor.Base,
-                                ellipsis = true
-                            )
+                                    trackGroup.getTrackFormat(index).language ?: "Undefined"
+                                ).displayName
+                            ) {
+                                player.trackSelectionParameters =
+                                    player.trackSelectionParameters
+                                        .buildUpon()
+                                        .setOverrideForType(
+                                            TrackSelectionOverride(
+                                                trackGroup.mediaTrackGroup,
+                                                index
+                                            )
+                                        )
+                                        .build()
+                                selectedTrack.value = trackGroup.mediaTrackGroup.id + index
+                            }
                         }
                     }
                 }
             }
         }
+    }
+}
+
+@Composable
+fun MediaTrack(
+    isTrackSelected: Boolean,
+    title: String,
+    onSelect: () -> Unit = {}
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onSelect() },
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        RadioButton(
+            selected = isTrackSelected
+        )
+        Label(
+            title = title,
+            maxLines = 2,
+            m = true,
+            contentColor = LocalColor.Base,
+            ellipsis = true,
+            modifier = Modifier.fillMaxWidth(fraction = 0.95F)
+        )
     }
 }
