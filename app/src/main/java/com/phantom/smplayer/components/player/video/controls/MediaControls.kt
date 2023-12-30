@@ -26,8 +26,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -47,12 +45,6 @@ import com.phantom.smplayer.convertMillisecondsToHHmmss
 import com.phantom.smplayer.data.Video
 import com.phantom.smplayer.ui.theme.LocalColor
 
-enum class Settings {
-    NONE,
-    AUDIO,
-    SUBTITLES
-}
-
 @Composable
 fun MediaControls(
     player: ExoPlayer,
@@ -62,66 +54,23 @@ fun MediaControls(
 
     val activityContext = LocalContext.current as VideoActivity
 
-    val showControls = remember {
-        mutableStateOf(true)
-    }
-
-    val playing = remember {
-        mutableStateOf(true)
-    }
-
-    val sliderPosition = remember {
-        mutableFloatStateOf(0F)
-    }
-
-    val brightness = remember {
-        mutableFloatStateOf(0F)
-    }
-
-    val showBrightness = remember {
-        mutableStateOf(false)
-    }
-
-    val controlsHandler = remember { Handler(Looper.getMainLooper()) }
-    val controlsListener = remember {
-        Runnable {
-            showControls.value = false
-        }
-    }
-
     val audioManager = remember {
         activityContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
     }
-
-    val volume = remember {
-        mutableFloatStateOf(audioManager.getStreamVolume(AudioManager.STREAM_MUSIC).toFloat())
-    }
-
-    val showVolume = remember {
-        mutableStateOf(false)
-    }
-
-    val sliding = remember {
-        mutableStateOf(false)
-    }
-
-    val removeControlCallback = { controlsHandler.removeCallbacks(controlsListener) }
-    val addControlDelay = { controlsHandler.postDelayed(controlsListener, 10000) }
-
-    val settings = remember {
-        mutableStateOf(Settings.NONE)
-    }
+    val mediaState = rememberMediaState(
+        initialMediaVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC).toFloat()
+    )
 
     DisposableEffect(player) {
-        addControlDelay()
+        mediaState.addControlDelay()
 
         val handler = Handler(Looper.getMainLooper())
 
         val listener = object : Runnable {
             override fun run() {
-                if (!sliding.value) {
+                if (!mediaState.isSliding.value) {
                     val currentPosition = player.currentPosition.toFloat()
-                    sliderPosition.floatValue = currentPosition
+                    mediaState.thumbPosition.floatValue = currentPosition
                 }
                 handler.postDelayed(this, 1000)
             }
@@ -133,11 +82,11 @@ fun MediaControls(
     }
 
     fun onTap() {
-        removeControlCallback()
-        if (!showControls.value) {
-            addControlDelay()
+        mediaState.removeControlCallback()
+        if (!mediaState.showMediaControls.value) {
+            mediaState.addControlDelay()
         }
-        showControls.value = !showControls.value
+        mediaState.showMediaControls.value = !mediaState.showMediaControls.value
     }
 
     fun onDoubleTap(forward: Boolean) {
@@ -146,9 +95,9 @@ fun MediaControls(
         } else {
             player.seekBack()
         }
-        sliderPosition.floatValue = player.currentPosition.toFloat()
-        removeControlCallback()
-        addControlDelay()
+        mediaState.thumbPosition.floatValue = player.currentPosition.toFloat()
+        mediaState.removeControlCallback()
+        mediaState.addControlDelay()
     }
 
     Box(
@@ -158,20 +107,16 @@ fun MediaControls(
                 detectTapGestures(onTap = { onTap() })
             }
             .pointerInput(Unit) {
-                detectHorizontalDragGestures(
-                    onDragStart = { showControls.value = true },
-                    onDragCancel = { showControls.value = false },
-                    onDragEnd = { showControls.value = false }
-                ) { _, dragAmount ->
-                    val amount = 500 * dragAmount
+                detectHorizontalDragGestures { _, dragAmount ->
+                    val amount = 100 * dragAmount
                     player.seekTo(player.currentPosition + amount.toLong())
-                    sliderPosition.floatValue += amount
+                    mediaState.thumbPosition.floatValue += amount
                 }
             }
     ) {
 
         AnimatedVisibility(
-            visible = showControls.value,
+            visible = mediaState.showMediaControls.value,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 5.dp, vertical = 20.dp)
@@ -218,7 +163,7 @@ fun MediaControls(
                                 .clickable(
                                     interactionSource = NoRippleInteractionSource(), null
                                 ) {
-                                    settings.value = Settings.SUBTITLES
+                                    mediaState.settings.value = Settings.SUBTITLES
                                 }
                         )
 
@@ -233,9 +178,8 @@ fun MediaControls(
                                 .clickable(
                                     interactionSource = NoRippleInteractionSource(), null
                                 ) {
-                                    settings.value = Settings.AUDIO
+                                    mediaState.settings.value = Settings.AUDIO
                                 }
-
                         )
                     }
                 }
@@ -244,7 +188,7 @@ fun MediaControls(
         }
 
         AnimatedVisibility(
-            visible = (settings.value != Settings.NONE),
+            visible = (mediaState.settings.value != Settings.NONE),
             modifier = Modifier
                 .width(300.dp)
                 .align(Alignment.CenterEnd)
@@ -252,20 +196,20 @@ fun MediaControls(
             enter = fadeIn(),
             exit = fadeOut()
         ) {
-            TrackSelection(player = player, isAudio = settings.value == Settings.AUDIO) {
-                settings.value = Settings.NONE
+            TrackSelection(player = player, isAudio = mediaState.settings.value == Settings.AUDIO) {
+                mediaState.settings.value = Settings.NONE
             }
         }
 
         // Left: Volume Gesture Listener
         GestureView(
-            flagState = showVolume,
-            previousState = volume,
+            flagState = mediaState.showMediaVolume,
+            previousState = mediaState.mediaVolume,
             alignment = Alignment.CenterStart,
             onDrag = {
                 audioManager.setStreamVolume(
                     AudioManager.STREAM_MUSIC,
-                    16 - volume.floatValue.toInt(),
+                    16 - mediaState.mediaVolume.floatValue.toInt(),
                     0
                 )
             },
@@ -274,9 +218,9 @@ fun MediaControls(
         ) {
 
             // Brightness Slider
-            if (showBrightness.value) {
+            if (mediaState.showScreenBrightness.value) {
                 SwipeControl(
-                    state = brightness,
+                    state = mediaState.screenBrightness,
                     isBrightnessControl = true
                 )
             }
@@ -284,12 +228,12 @@ fun MediaControls(
 
         // Right: Brightness Listener
         GestureView(
-            flagState = showBrightness,
-            previousState = brightness,
+            flagState = mediaState.showScreenBrightness,
+            previousState = mediaState.screenBrightness,
             alignment = Alignment.CenterEnd,
             onDrag = {
                 val attributes = activityContext.window.attributes
-                attributes.screenBrightness = (16F - brightness.floatValue) / 16F
+                attributes.screenBrightness = (16F - mediaState.screenBrightness.floatValue) / 16F
 
                 activityContext.window.attributes = attributes
             },
@@ -297,16 +241,16 @@ fun MediaControls(
             onDoubleTap = { onDoubleTap(forward = true) }
         ) {
             // Volume Slider
-            if (showVolume.value) {
+            if (mediaState.showMediaVolume.value) {
                 SwipeControl(
-                    state = volume,
+                    state = mediaState.mediaVolume,
                     isBrightnessControl = false
                 )
             }
         }
 
         AnimatedVisibility(
-            visible = showControls.value,
+            visible = mediaState.showMediaControls.value,
             modifier = Modifier
                 .fillMaxHeight()
                 .width(350.dp)
@@ -338,20 +282,20 @@ fun MediaControls(
                 )
 
                 Icon(
-                    painter = painterResource(id = if (playing.value) R.drawable.pause_circle else R.drawable.play_circle),
+                    painter = painterResource(id = if (mediaState.isPlaying.value) R.drawable.pause_circle else R.drawable.play_circle),
                     contentDescription = null,
                     tint = LocalColor.Monochrome.White,
                     modifier = Modifier
                         .size(48.dp)
                         .clip(CircleShape)
                         .clickable {
-                            if (playing.value) {
+                            if (mediaState.isPlaying.value) {
                                 player.pause()
                             } else {
                                 player.play()
                             }
 
-                            playing.value = !playing.value
+                            mediaState.isPlaying.value = !mediaState.isPlaying.value
                         }
                 )
 
@@ -377,7 +321,7 @@ fun MediaControls(
         }
 
         AnimatedVisibility(
-            visible = showControls.value,
+            visible = mediaState.showMediaControls.value,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth(fraction = 0.95F)
@@ -389,16 +333,16 @@ fun MediaControls(
                 SeekBar(
                     minimumValue = 0F,
                     maximumValue = video.duration.toFloat(),
-                    sliderValue = sliderPosition.floatValue,
+                    sliderValue = mediaState.thumbPosition.floatValue,
                     onSlidingComplete = {
-                        sliding.value = false
-                        addControlDelay()
-                        player.seekTo(sliderPosition.floatValue.toLong())
+                        mediaState.isSliding.value = false
+                        mediaState.addControlDelay()
+                        player.seekTo(mediaState.thumbPosition.floatValue.toLong())
                     },
                     onValueChange = {
-                        sliding.value = true
-                        removeControlCallback()
-                        sliderPosition.floatValue = it
+                        mediaState.isSliding.value = true
+                        mediaState.removeControlCallback()
+                        mediaState.thumbPosition.floatValue = it
                     }
                 )
                 Row(
@@ -408,7 +352,7 @@ fun MediaControls(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Label(
-                        title = convertMillisecondsToHHmmss(sliderPosition.floatValue.toLong()),
+                        title = convertMillisecondsToHHmmss(mediaState.thumbPosition.floatValue.toLong()),
                         white = true,
                         semiBold = true,
                         m = true
