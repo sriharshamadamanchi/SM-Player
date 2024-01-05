@@ -71,8 +71,6 @@ class VideoDirectoryScanner(private val context: Context) {
                 }
             }
 
-            Log.i("Harsha", "" + videoMap)
-
             mainViewModel.updateVideoDirectories(videoMap)
 
         }
