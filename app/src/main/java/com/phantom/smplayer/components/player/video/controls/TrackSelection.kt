@@ -68,7 +68,7 @@ fun TrackSelection(
                     .padding(top = 10.dp),
             ) {
                 Label(
-                    title = if (isAudio) "Audio" else "Subtitles",
+                    title = if (isAudio) "Audio" else "Subtitle",
                     semiBold = true,
                     xl18 = true,
                     center = true,
