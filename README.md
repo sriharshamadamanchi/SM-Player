@@ -1,1 +1,1 @@
-![palyer](https://github.com/HarshaR1642/SM-Player/assets/79972143/26683286-e0f5-4649-94a0-5ca617f0f8dc)
+![player](https://github.com/HarshaR1642/SM-Player/assets/79972143/a13bfb6b-1a64-4dfa-abda-285cbbfb1d37)
