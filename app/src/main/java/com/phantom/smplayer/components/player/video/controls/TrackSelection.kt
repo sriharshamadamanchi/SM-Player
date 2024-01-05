@@ -1,5 +1,6 @@
 package com.phantom.smplayer.components.player.video.controls
 
+import android.util.Log
 import androidx.annotation.OptIn
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -17,6 +18,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.media3.common.C
 import androidx.media3.common.TrackSelectionOverride
 import androidx.media3.common.Tracks
 import androidx.media3.common.util.UnstableApi
@@ -50,6 +52,7 @@ fun TrackSelection(
                     trackGroup.isTrackSupported(it) &&
                             trackGroup.getTrackFormat(it).language != null &&
                             trackGroup.getTrackFormat(it).language != "und" &&
+                            trackGroup.getTrackFormat(it).sampleMimeType?.startsWith("video/") == false &&
                             trackGroup.getTrackFormat(it).sampleMimeType?.startsWith("audio/") == isAudio
                 }
                 .map {
@@ -91,17 +94,37 @@ fun TrackSelection(
                                     trackGroup.getTrackFormat(index).language ?: "Undefined"
                                 ).displayName
                             ) {
-                                player.trackSelectionParameters =
-                                    player.trackSelectionParameters
-                                        .buildUpon()
-                                        .setOverrideForType(
-                                            TrackSelectionOverride(
-                                                trackGroup.mediaTrackGroup,
-                                                index
-                                            )
-                                        )
-                                        .build()
+
+                                val previousTrack = selectedTrack.value
+
+                                val trackSelectionParameters =
+                                    player.trackSelectionParameters.buildUpon()
+
+                                trackSelectionParameters.setOverrideForType(
+                                    TrackSelectionOverride(
+                                        trackGroup.mediaTrackGroup,
+                                        index
+                                    )
+                                )
+
                                 selectedTrack.value = trackGroup.mediaTrackGroup.id + index
+
+                                if (!isAudio) {
+                                    if (previousTrack == (trackGroup.mediaTrackGroup.id + index)) {
+                                        trackSelectionParameters.setTrackTypeDisabled(
+                                            C.TRACK_TYPE_TEXT,
+                                            true
+                                        )
+                                        selectedTrack.value = ""
+                                    } else {
+                                        trackSelectionParameters.setTrackTypeDisabled(
+                                            C.TRACK_TYPE_TEXT,
+                                            false
+                                        )
+                                    }
+                                }
+
+                                player.trackSelectionParameters = trackSelectionParameters.build()
                             }
                         }
                     }
@@ -125,7 +148,7 @@ fun MediaTrack(
     ) {
         RadioButton(
             selected = isTrackSelected
-        ){
+        ) {
             onSelect()
         }
         Label(

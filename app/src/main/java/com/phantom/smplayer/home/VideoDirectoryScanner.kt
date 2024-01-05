@@ -5,7 +5,6 @@ import android.content.Context
 import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
-import android.util.Log
 import android.util.Size
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModelProvider
