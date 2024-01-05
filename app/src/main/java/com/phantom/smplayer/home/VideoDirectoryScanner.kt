@@ -28,7 +28,7 @@ class VideoDirectoryScanner(private val context: Context) {
         val projection = arrayOf(
             MediaStore.Video.Media.DATA,
             MediaStore.Video.Media._ID,
-            MediaStore.Video.Media.TITLE,
+            MediaStore.Video.Media.DISPLAY_NAME,
             MediaStore.Video.Media.DURATION
         )
 
@@ -41,7 +41,7 @@ class VideoDirectoryScanner(private val context: Context) {
             val dataColumn = cursor.getColumnIndexOrThrow(MediaStore.Video.Media.DATA)
             val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Video.Media._ID)
             val nameColumn =
-                cursor.getColumnIndexOrThrow(MediaStore.Video.Media.TITLE)
+                cursor.getColumnIndexOrThrow(MediaStore.Video.Media.DISPLAY_NAME)
             val durationColumn =
                 cursor.getColumnIndexOrThrow(MediaStore.Video.Media.DURATION)
 
