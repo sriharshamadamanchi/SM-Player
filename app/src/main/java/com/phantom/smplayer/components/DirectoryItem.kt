@@ -12,8 +12,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
@@ -47,7 +45,7 @@ fun DirectoryItem(
             Label(title = directoryName, contentColor = LocalColor.Monochrome.Light)
             Spacer(modifier = Modifier.height(5.dp))
             Label(
-                title = "$videoCount Video" + if(videoCount > 1) "s" else "",
+                title = "$videoCount Video" + if (videoCount > 1) "s" else "",
                 contentColor = LocalColor.Monochrome.Medium,
                 s = true
             )

@@ -1,10 +1,7 @@
 package com.phantom.smplayer.components.player.video.controls
 
 import androidx.annotation.OptIn
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectDragGestures
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -14,23 +11,16 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.TrackSelectionOverride
 import androidx.media3.common.Tracks
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
-import com.phantom.smplayer.R
 import com.phantom.smplayer.components.Label
 import com.phantom.smplayer.components.RadioButton
 import com.phantom.smplayer.ui.theme.LocalColor
@@ -40,27 +30,11 @@ import java.util.Locale
 @Composable
 fun TrackSelection(
     player: ExoPlayer,
-    isAudio: Boolean,
-    onClose: () -> Unit
+    isAudio: Boolean
 ) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .clip(RoundedCornerShape(topStart = 10.dp, bottomStart = 10.dp))
-            .pointerInput(Unit) {
-                detectDragGestures { _, _ -> }
-            }
-            .pointerInput(Unit) {
-                detectTapGestures { }
-            }
-            .background(
-                brush = Brush.verticalGradient(
-                    listOf(
-                        LocalColor.Monochrome.White,
-                        LocalColor.Monochrome.Regular
-                    )
-                )
-            ),
     ) {
         val trackGroups = remember {
             mutableListOf<Tracks.Group>()
@@ -93,14 +67,6 @@ fun TrackSelection(
                     .fillMaxWidth()
                     .padding(top = 10.dp),
             ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.close), contentDescription = null,
-                    modifier = Modifier
-                        .padding(10.dp)
-                        .clickable {
-                            onClose()
-                        }
-                )
                 Label(
                     title = if (isAudio) "Audio" else "Subtitles",
                     semiBold = true,
@@ -159,7 +125,9 @@ fun MediaTrack(
     ) {
         RadioButton(
             selected = isTrackSelected
-        )
+        ){
+            onSelect()
+        }
         Label(
             title = title,
             maxLines = 2,

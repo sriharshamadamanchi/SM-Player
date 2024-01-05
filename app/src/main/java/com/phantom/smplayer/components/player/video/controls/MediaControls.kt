@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -155,7 +154,7 @@ fun MediaControls(
                 ) {
                     Row {
                         Icon(
-                            painter = painterResource(id = R.drawable.subtitles),
+                            painter = painterResource(id = R.drawable.settings),
                             contentDescription = null,
                             tint = LocalColor.Monochrome.White,
                             modifier = Modifier
@@ -163,22 +162,7 @@ fun MediaControls(
                                 .clickable(
                                     interactionSource = NoRippleInteractionSource(), null
                                 ) {
-                                    mediaState.settings.value = Settings.SUBTITLES
-                                }
-                        )
-
-                        Spacer(modifier = Modifier.width(10.dp))
-
-                        Icon(
-                            painter = painterResource(id = R.drawable.music_note),
-                            contentDescription = null,
-                            tint = LocalColor.Monochrome.White,
-                            modifier = Modifier
-                                .padding(10.dp)
-                                .clickable(
-                                    interactionSource = NoRippleInteractionSource(), null
-                                ) {
-                                    mediaState.settings.value = Settings.AUDIO
+                                    mediaState.settings.value = SettingsState.AUDIO
                                 }
                         )
                     }
@@ -188,19 +172,15 @@ fun MediaControls(
         }
 
         AnimatedVisibility(
-            visible = (mediaState.settings.value != Settings.NONE),
+            visible = (mediaState.settings.value != SettingsState.NONE),
             modifier = Modifier
-                .width(300.dp)
-                .align(Alignment.CenterEnd)
-                .zIndex(1F),
+                .align(Alignment.Center)
+                .zIndex(10F),
             enter = fadeIn(),
             exit = fadeOut()
         ) {
-            TrackSelection(
-                player = player,
-                isAudio = mediaState.settings.value == Settings.AUDIO
-            ) {
-                mediaState.settings.value = Settings.NONE
+            Settings(player = player) {
+                mediaState.settings.value = SettingsState.NONE
             }
         }
 

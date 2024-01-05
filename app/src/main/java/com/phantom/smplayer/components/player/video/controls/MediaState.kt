@@ -8,7 +8,7 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 
-enum class Settings {
+enum class SettingsState {
     NONE,
     AUDIO,
     SUBTITLES
@@ -45,7 +45,7 @@ class MediaState(
 
     val isSliding = mutableStateOf(false)
 
-    val settings = mutableStateOf(Settings.NONE)
+    val settings = mutableStateOf(SettingsState.NONE)
 
     private val controlsHandler = Handler(Looper.getMainLooper())
 
