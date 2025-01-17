@@ -1,5 +1,6 @@
 package com.phantom.smplayer.home
 
+import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -28,7 +29,7 @@ fun DirectoryList(
 ) {
 
     val mainViewModel: MainViewModel =
-        viewModel(viewModelStoreOwner = LocalContext.current as MainActivity)
+        viewModel(viewModelStoreOwner = LocalActivity.current as MainActivity)
 
     val videos = mainViewModel.getVideoDirectories().observeAsState().value ?: emptyMap()
 

@@ -4,6 +4,7 @@ import android.content.Context
 import android.media.AudioManager
 import android.os.Handler
 import android.os.Looper
+import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -51,7 +52,7 @@ fun MediaControls(
     onNavigateBack: () -> Unit
 ) {
 
-    val activityContext = LocalContext.current as VideoActivity
+    val activityContext = LocalActivity.current as VideoActivity
 
     val audioManager = remember {
         activityContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager

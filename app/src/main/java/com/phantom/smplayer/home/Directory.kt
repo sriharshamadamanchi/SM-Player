@@ -2,6 +2,7 @@ package com.phantom.smplayer.home
 
 import android.content.Intent
 import android.os.Build
+import androidx.activity.compose.LocalActivity
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -35,7 +36,7 @@ fun Directory(
     val context = LocalContext.current
 
     val mainViewModel: MainViewModel =
-        viewModel(viewModelStoreOwner = LocalContext.current as MainActivity)
+        viewModel(viewModelStoreOwner = LocalActivity.current as MainActivity)
 
     val videosList = mainViewModel.getVideoDirectories().observeAsState().value ?: emptyMap()
 
